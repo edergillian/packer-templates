@@ -30,7 +30,7 @@ As variáveis de ambiente são:
 * VCENTER_NETWORK: nome da rede onde será criada a interface da VM
 * VCENTER_DATASTORE: nome do datastore onde será armazenado o template
 * VCENTER_FOLDER: nome da pasta onde será incluído o template
-* VCENTER_VM_NAME: nome do template
+* TEMPLATE_NAME: nome do template
 
 Uma vez que as variáveis de ambiente estejam definidas, basta entrar na pasta e executar o seguinte comando (é necessário que o Packer esteja instalado):
 
