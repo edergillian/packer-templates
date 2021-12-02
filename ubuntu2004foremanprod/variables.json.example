@@ -1,0 +1,16 @@
+{
+    "vsphere-server": "<VCENTER_SERVER>",
+    "vsphere-user": "{{env `VCENTER_USER`}}",
+    "vsphere-password": "{{env `VCENTER_PASSWORD`}}",
+    "vsphere-datacenter": "<VCENTER_DATACENTER>",
+    "vsphere-cluster": "<VCENTER_CLUSTER>",
+    "vsphere-network": "<VCENTER_NETWORK>",
+    "vsphere-datastore": "<VCENTER_DATASTORE>",
+    "vsphere-folder": "<VCENTER_FOLDER>",
+    "vm-name": "<TEMPLATE_NAME>",
+    "vm-cpu-num": "2",
+    "vm-mem-size": "2048",
+    "vm-disk-size": "25600",
+    "template_username": "ubuntu",
+    "template_password": "1Senh@Forte!"
+}

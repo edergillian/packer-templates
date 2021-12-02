@@ -1,0 +1,156 @@
+stages:
+  - get_env
+  - deploy
+  - clone_to_prod
+  # - update_foreman
+
+variables:
+  VAULT_ADDR: <vault_address>
+  VAULT_AUTH_ROLE: <vault_jwt_role>
+  VAULT_AUTH_PATH: <vault_jwt_path>
+
+image: <image_with_packer_and_vault>
+
+.get_env_from_vault: &_get_env_from_vault >
+  export VAULT_TOKEN="$(vault write -field=token auth/jwt/login role=$VAULT_AUTH_ROLE jwt=$CI_JOB_JWT)" &&
+  export VCENTER_USER="$(vault kv get -field=username path/to/secrets)" &&
+  export VCENTER_PASSWORD="$(vault kv get -field=password infra/vcenter/packer)"
+
+deploy_ubuntu1804rancher:
+  stage: deploy
+  tags:
+    - infra
+  before_script:
+    - *_get_env_from_vault
+  script:
+    - echo "Deploying Ubuntu 18.04 - Rancher"
+    - cd ubuntu1804rancher
+    - packer build -force -var-file variables.json ubuntu-1804.json
+  only:
+    - schedules
+
+deploy_ubuntu2004rancher:
+  stage: deploy
+  tags:
+    - infra
+  before_script:
+    - *_get_env_from_vault
+  script:
+    - echo "Deploying Ubuntu 20.04 - Rancher"
+    - cd ubuntu2004rancher
+    - packer build -force -var-file variables.json ubuntu-2004.json
+  only:
+    - schedules
+
+deploy_ubuntu1804rancherprod:
+  stage: clone_to_prod
+  tags:
+    - producao
+  before_script:
+    - *_get_env_from_vault
+  script:
+    - echo "Deploying Ubuntu 18.04 - Rancher - Producao"
+    - cd ubuntu1804rancherprod
+    - packer build -force -var-file variables.json ubuntu-1804.json
+  only:
+    - schedules
+  needs: ["deploy_ubuntu1804rancher"]
+
+deploy_ubuntu2004rancherprod:
+  stage: clone_to_prod
+  tags:
+    - producao
+  before_script:
+    - *_get_env_from_vault
+  script:
+    - echo "Deploying Ubuntu 20.04 - Rancher - Producao"
+    - cd ubuntu2004rancherprod
+    - packer build -force -var-file variables.json ubuntu-2004.json
+  only:
+    - schedules
+  needs: ["deploy_ubuntu2004rancher"]
+
+deploy_ubuntu1804foreman:
+  stage: deploy
+  tags:
+    - infra
+  before_script:
+    - *_get_env_from_vault
+  script:
+    - echo "Deploying Ubuntu 18.04 - Foreman"
+    - cd ubuntu1804foreman
+    - packer build -force -var-file variables.json ubuntu-1804.json
+  only:
+    - schedules
+
+deploy_ubuntu2004foreman:
+  stage: deploy
+  tags:
+    - infra
+  before_script:
+    - *_get_env_from_vault
+  script:
+    - echo "Deploying Ubuntu 20.04 - Foreman"
+    - cd ubuntu2004foreman
+    - packer build -force -var-file variables.json ubuntu-2004.json
+  only:
+    - schedules
+
+deploy_ubuntu1804foremanprod:
+  stage: clone_to_prod
+  tags:
+    - producao
+  before_script:
+    - *_get_env_from_vault
+  script:
+    - echo "Deploying Ubuntu 18.04 - Foreman"
+    - cd ubuntu1804foremanprod
+    - packer build -force -var-file variables.json ubuntu-1804.json
+  only:
+    - schedules
+  needs: ["deploy_ubuntu1804foreman"]
+
+deploy_ubuntu2004foremanprod:
+  stage: clone_to_prod
+  tags:
+    - producao
+  before_script:
+    - *_get_env_from_vault
+  script:
+    - echo "Deploying Ubuntu 20.04 - Foreman"
+    - cd ubuntu2004foremanprod
+    - packer build -force -var-file variables.json ubuntu-2004.json
+  only:
+    - schedules
+  needs: ["deploy_ubuntu2004foreman"]
+
+# update_foreman:
+#   stage: update_foreman
+#   tags:
+#     - infra
+#   image: <image_with_hammer_cli>
+#   before_script:
+#     - sed -i -e "s/FOREMAN_USER/$FOREMAN_USER/g" /etc/hammer/cli.modules.d/foreman.yml && sed -i -e "s/FOREMAN_PASSWORD/$FOREMAN_PASSWORD/g" /etc/hammer/cli.modules.d/foreman.yml
+#     - export UBUNTU_18_DEV_UUID=$(hammer compute-resource images --id=1 | grep dev-ubuntu-1804-foreman | cut -d"|" -f1)
+#     - export UBUNTU_20_DEV_UUID=$(hammer compute-resource images --id=1 | grep dev-ubuntu-2004-foreman | cut -d"|" -f1)
+#     - export UBUNTU_18_PROD_UUID=$(hammer compute-resource images --id=1 | grep prod-ubuntu-1804-foreman | cut -d"|" -f1)
+#     - export UBUNTU_20_PROD_UUID=$(hammer compute-resource images --id=1 | grep prod-ubuntu-2004-foreman | cut -d"|" -f1)
+#   script:
+#     - echo "Updating Foreman images"
+#     - echo "Ubuntu 18.04 Image..."
+#     - hammer compute-resource image update --name="Ubuntu 18.04 - Packer Dev" --compute-resource-id=1 --uuid=$UBUNTU_18_DEV_UUID
+#     - echo "Ubuntu 20.04 Image..."
+#     - hammer compute-resource image update --name="Ubuntu 20.04 - Packer Dev" --compute-resource-id=1 --uuid=$UBUNTU_20_DEV_UUID
+#     - echo "Ubuntu 18.04 - Prod Image..."
+#     - hammer compute-resource image update --name="Ubuntu 18.04 - Packer Prod" --compute-resource-id=1 --uuid=$UBUNTU_18_PROD_UUID
+#     - echo "Ubuntu 20.04 - Prod Image..."
+#     - hammer compute-resource image update --name="Ubuntu 20.04 - Packer Prod" --compute-resource-id=1 --uuid=$UBUNTU_20_PROD_UUID
+#   only:
+#     - schedules
+#   needs:
+#     [
+#       "deploy_ubuntu2004foreman",
+#       "deploy_ubuntu1804foreman",
+#       "deploy_ubuntu1804foremanprod",
+#       "deploy_ubuntu2004foremanprod",
+#     ]

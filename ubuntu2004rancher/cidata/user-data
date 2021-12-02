@@ -1,0 +1,39 @@
+#cloud-config
+autoinstall:
+    version: 1
+    early-commands:
+        # Stop ssh for packer
+        - sudo systemctl stop ssh
+    locale: en_US
+    keyboard:
+        layout: en
+        variant: us
+    identity:
+        hostname: template-ubuntu-2004
+        username: ubuntu
+        password: "$6$4xSUSPzlW$6DtFt0LACXF2r30VHudk6Tgi9k9EDaaRkl/VkioEzKPplk055T.g16tH926t9SNvj/SxMCN4z9xo7IsuW3BE5." # Hash de 1Senh@Forte!
+    ssh:
+        install-server: yes
+        allow-pw: yes
+    storage:
+        layout:
+            name: direct
+    apt:
+        primary:
+            - arches: [i386, amd64]
+              uri: "http://archive.ubuntu.com/ubuntu/"
+    packages:
+        - open-vm-tools
+        - net-tools
+        - perl-modules
+        - cloud-init
+    user-data:
+        disable_root: false
+    late-commands:
+        - sed -i -e 's/^#\?PasswordAuthentication.*/PasswordAuthentication yes/g' /target/etc/ssh/sshd_config
+        - sed -i -e 's/^#\?PermitRootLogin.*/PermitRootLogin no/g' /target/etc/ssh/sshd_config
+        - 'sed -i "s/dhcp4: true/&\n      dhcp-identifier: mac/" /etc/netplan/00-installer-config.yaml'
+        - echo 'ubuntu ALL=(ALL) NOPASSWD:ALL' > /target/etc/sudoers.d/ubuntu
+        - curtin in-target --target=/target -- chmod 440 /etc/sudoers.d/ubuntu
+        - curtin in-target --target=/target -- apt-get update
+        - curtin in-target --target=/target -- apt-get upgrade --yes

@@ -1,0 +1,29 @@
+{
+  "builders": [
+    {
+      "type": "vsphere-clone",
+      "vcenter_server": "{{user `vsphere-server`}}",
+      "username": "{{user `vsphere-user`}}",
+      "password": "{{user `vsphere-password`}}",
+      "insecure_connection": "true",
+      "template": "dev-ubuntu-1804-foreman",
+      "datacenter": "{{user `vsphere-datacenter`}}",
+      "cluster": "{{user `vsphere-cluster`}}",
+      "datastore": "{{user `vsphere-datastore`}}",
+      "folder": "{{user `vsphere-folder`}}",
+      "CPUs": 2,
+      "RAM": 2048,
+      "RAM_reserve_all": false,
+      "disk_controller_type": "pvscsi",
+      "storage": {
+        "disk_size": 15000,
+        "disk_thin_provisioned": true
+      },
+      "network": "{{user `vsphere-network`}}",
+      "vm_name": "{{user `vm-name`}}",
+      "notes": "Template construído via pipeline em {{ isotime }} (UTC)",
+      "convert_to_template": true,
+      "communicator": "none"
+    }
+  ]
+}
